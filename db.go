@@ -17,7 +17,7 @@ import (
 
 var DB *gorm.DB
 
-func init() {
+func dbSetup() {
 	var err error
 	if DB, err = OpenTestConnection(); err != nil {
 		log.Printf("failed to connect database, got error %v\n", err)
@@ -42,6 +42,7 @@ func init() {
 }
 
 func OpenTestConnection() (db *gorm.DB, err error) {
+
 	dbDSN := os.Getenv("GORM_DSN")
 	switch os.Getenv("GORM_DIALECT") {
 	case "mysql":

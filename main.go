@@ -2,7 +2,18 @@ package main
 
 import (
 	"log"
+	"os"
 )
+
+func init() {
+	// set the environment variables for the database connection
+	gormDialect := os.Getenv("GORM_DIALECT")
+	if gormDialect == "" {
+		gormDialect = "mysql"
+	}
+	os.Setenv("GORM_DIALECT", gormDialect)
+	dbSetup()
+}
 
 type Users struct {
 	// id and customer are the primary key because if a call goes from one customer to another, it will be a new row in the database
@@ -16,7 +27,7 @@ type Users struct {
 }
 
 func (*Users) TableName() string {
-	return "people"
+	return "test2.people"
 }
 
 type UsersEmails struct {
@@ -29,7 +40,7 @@ type UsersEmails struct {
 }
 
 func (UsersEmails) TableName() string {
-	return "people_email"
+	return "test2.people_email"
 }
 
 type UsersMobiles struct {
@@ -40,26 +51,33 @@ type UsersMobiles struct {
 }
 
 func (UsersMobiles) TableName() string {
-	return "people_mobile"
+	return "test2.people_mobile"
 }
 
 func main() {
 
 	db := DB
-
-	err := db.AutoMigrate(UsersMobiles{})
-	if err != nil {
-		log.Fatalln("error code (2.1387) failed to migrate UsersMobiles", err.Error())
-	}
-	err = db.AutoMigrate(UsersEmails{})
-	if err != nil {
-		log.Fatalln("error code (2.1387) failed to migrate UsersEmails", err.Error())
+	if err := db.Exec("CREATE DATABASE IF NOT EXISTS test2").Error; err != nil {
+		log.Fatalln("error creating test2", err.Error())
 	}
 
-	err = db.AutoMigrate(Users{})
-	if err != nil {
-		log.Fatalln("error code (2.1385) failed to migrate Users", err.Error())
+	// the only to fix is to run `USE test2`
+	//if err := db.Exec("USE test2").Error; err != nil {
+	//	log.Fatalln("error swiching to test2", err.Error())
+	//}
+
+	if err := db.AutoMigrate(Users{}); err != nil {
+		log.Fatalln("error migrate Users", err.Error())
 	}
+
+	if err := db.AutoMigrate(UsersMobiles{}); err != nil {
+		log.Fatalln("error migrate UsersMobiles", err.Error())
+	}
+
+	if err := db.AutoMigrate(UsersEmails{}); err != nil {
+		log.Fatalln("error migrate UsersEmails", err.Error())
+	}
+
 	return
 
 }
