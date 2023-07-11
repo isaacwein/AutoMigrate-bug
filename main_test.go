@@ -1,20 +1,36 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
-// GORM_REPO: https://github.com/go-gorm/gorm.git
-// GORM_BRANCH: master
-// TEST_DRIVERS: sqlite, mysql, postgres, sqlserver
+func TestMainFunction(t *testing.T) {
+	envs := []string{
+		"mysql",
+		"mariadb",
+		//"sqlite3",
+	}
+	os.Setenv("DEBUG", "true")
+	for _, env := range envs {
+		t.Logf("------------ Start Testing %s ------------\n", env)
+		os.Setenv("GORM_DIALECT", env)
 
-func TestGORM(t *testing.T) {
-	user := User{Name: "jinzhu"}
+		if env == "sqlite3" {
+			os.Setenv("CGO_ENABLED", "0")
+		}
 
-	DB.Create(&user)
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Errorf("PANIC: %v\n", r)
+				}
+			}()
+			main()
+		}()
 
-	var result User
-	if err := DB.First(&result, user.ID).Error; err != nil {
-		t.Errorf("Failed, got error: %v", err)
+		// Reset the environment variable.
+		os.Unsetenv("GORM_DIALECT")
+		t.Logf("------------- End Testing %s -------------\n", env)
 	}
 }

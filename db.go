@@ -1,29 +1,25 @@
 package main
 
 import (
-	"log"
-	"math/rand"
-	"os"
-	"path/filepath"
-	"time"
-
+	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"log"
+	"os"
+	"path/filepath"
 )
 
-var DB *gorm.DB
+func dbSetup() (db *gorm.DB, err error) {
 
-func dbSetup() {
-	var err error
-	if DB, err = OpenTestConnection(); err != nil {
+	if db, err = OpenTestConnection(); err != nil {
 		log.Printf("failed to connect database, got error %v\n", err)
-		os.Exit(1)
+
 	} else {
-		sqlDB, err := DB.DB()
+		sqlDB, err := db.DB()
 		if err == nil {
 			err = sqlDB.Ping()
 		}
@@ -32,18 +28,18 @@ func dbSetup() {
 			log.Printf("failed to connect database, got error %v\n", err)
 		}
 
-		RunMigrations()
-		if DB.Dialector.Name() == "sqlite" {
-			DB.Exec("PRAGMA foreign_keys = ON")
+		if db.Dialector.Name() == "sqlite" {
+			db.Exec("PRAGMA foreign_keys = ON")
 		}
 
-		DB.Logger = DB.Logger.LogMode(logger.Info)
 	}
+	return
 }
 
 func OpenTestConnection() (db *gorm.DB, err error) {
 
 	dbDSN := os.Getenv("GORM_DSN")
+	fmt.Println("GORM_DSN: ", dbDSN)
 	switch os.Getenv("GORM_DIALECT") {
 	case "mysql":
 		log.Println("testing mysql...")
@@ -51,12 +47,19 @@ func OpenTestConnection() (db *gorm.DB, err error) {
 			dbDSN = "gorm:gorm@tcp(localhost:9910)/gorm?charset=utf8&parseTime=True&loc=Local"
 		}
 		db, err = gorm.Open(mysql.Open(dbDSN), &gorm.Config{})
+	case "mariadb":
+		log.Println("testing mariadb...")
+		if dbDSN == "" {
+			dbDSN = "gorm:gorm@tcp(localhost:9950)/gorm?charset=utf8&parseTime=True&loc=Local"
+		}
+		db, err = gorm.Open(postgres.Open(dbDSN), &gorm.Config{})
 	case "postgres":
 		log.Println("testing postgres...")
 		if dbDSN == "" {
-			dbDSN = "user=gorm password=gorm host=localhost dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
+			dbDSN = "user=gorm password=gorm host=localhost dbname=gorm port=9920 sslmode=disable TimeZone=America/New_York"
 		}
 		db, err = gorm.Open(postgres.Open(dbDSN), &gorm.Config{})
+
 	case "sqlserver":
 		// CREATE LOGIN gorm WITH PASSWORD = 'LoremIpsum86';
 		// CREATE DATABASE gorm;
@@ -80,30 +83,4 @@ func OpenTestConnection() (db *gorm.DB, err error) {
 	}
 
 	return
-}
-
-func RunMigrations() {
-	var err error
-	allModels := []interface{}{&User{}, &Account{}, &Pet{}, &Company{}, &Toy{}, &Language{}}
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(allModels), func(i, j int) { allModels[i], allModels[j] = allModels[j], allModels[i] })
-
-	DB.Migrator().DropTable("user_friends", "user_speaks")
-
-	if err = DB.Migrator().DropTable(allModels...); err != nil {
-		log.Printf("Failed to drop table, got error %v\n", err)
-		os.Exit(1)
-	}
-
-	if err = DB.AutoMigrate(allModels...); err != nil {
-		log.Printf("Failed to auto migrate, but got error %v\n", err)
-		os.Exit(1)
-	}
-
-	for _, m := range allModels {
-		if !DB.Migrator().HasTable(m) {
-			log.Printf("Failed to create table for %#v\n", m)
-			os.Exit(1)
-		}
-	}
 }

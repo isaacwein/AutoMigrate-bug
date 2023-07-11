@@ -2,18 +2,7 @@ package main
 
 import (
 	"log"
-	"os"
 )
-
-func init() {
-	// set the environment variables for the database connection
-	gormDialect := os.Getenv("GORM_DIALECT")
-	if gormDialect == "" {
-		gormDialect = "mysql"
-	}
-	os.Setenv("GORM_DIALECT", gormDialect)
-	dbSetup()
-}
 
 type Users struct {
 	// id and customer are the primary key because if a call goes from one customer to another, it will be a new row in the database
@@ -56,9 +45,19 @@ func (UsersMobiles) TableName() string {
 
 func main() {
 
-	db := DB
+	db, err := dbSetup()
+
+	if err != nil {
+		log.Panicln("error dbSetup", err.Error())
+	}
+	sql, err := db.DB()
+	if err != nil {
+		log.Panicln("getting error", err.Error())
+	}
+
+	defer sql.Close()
 	if err := db.Exec("CREATE DATABASE IF NOT EXISTS test2").Error; err != nil {
-		log.Fatalln("error creating test2", err.Error())
+		log.Panicln("error creating test2", err.Error())
 	}
 
 	// the only to fix is to run `USE test2`
@@ -67,15 +66,15 @@ func main() {
 	//}
 
 	if err := db.AutoMigrate(Users{}); err != nil {
-		log.Fatalln("error migrate Users", err.Error())
+		log.Panicln("error migrate Users", err.Error())
 	}
 
 	if err := db.AutoMigrate(UsersMobiles{}); err != nil {
-		log.Fatalln("error migrate UsersMobiles", err.Error())
+		log.Panicln("error migrate UsersMobiles", err.Error())
 	}
 
 	if err := db.AutoMigrate(UsersEmails{}); err != nil {
-		log.Fatalln("error migrate UsersEmails", err.Error())
+		log.Panicln("error migrate UsersEmails", err.Error())
 	}
 
 	return
