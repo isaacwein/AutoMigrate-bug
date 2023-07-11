@@ -23,3 +23,23 @@ services:
       - MYSQL_ROOT_PASSWORD="yes"
     volumes:
       - ./sql-scripts:/docker-entrypoint-initdb.d/
+#  postgres:
+#    image: 'postgres:latest'
+#    ports:
+#      - "9920:5432"
+#    environment:
+#      - TZ=Asia/Shanghai
+#      - POSTGRES_DB=gorm
+#      - POSTGRES_USER=gorm
+#      - POSTGRES_PASSWORD=gorm
+#  mssql:
+#    image: '${MSSQL_IMAGE:-mcmoe/mssqldocker}:latest'
+#    ports:
+#      - "9930:1433"
+#    environment:
+#      - ACCEPT_EULA=Y
+#      - SA_PASSWORD=LoremIpsum86
+#      - MSSQL_DB=gorm
+#      - MSSQL_USER=gorm
+#      - MSSQL_PASSWORD=LoremIpsum86
+

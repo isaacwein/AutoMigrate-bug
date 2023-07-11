@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 )
 
 type Users struct {
@@ -42,9 +44,10 @@ type UsersMobiles struct {
 func (UsersMobiles) TableName() string {
 	return "test2.people_mobile"
 }
-
 func main() {
 
+	dbDSN := os.Getenv("GORM_DSN")
+	fmt.Println("GORM_DSN:", dbDSN)
 	db, err := dbSetup()
 
 	if err != nil {

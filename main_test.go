@@ -5,20 +5,15 @@ import (
 	"testing"
 )
 
-func TestMainFunction(t *testing.T) {
+func TestMainFunc(t *testing.T) {
 	envs := []string{
 		"mysql",
 		"mariadb",
-		//"sqlite3",
 	}
 	os.Setenv("DEBUG", "true")
 	for _, env := range envs {
 		t.Logf("------------ Start Testing %s ------------\n", env)
 		os.Setenv("GORM_DIALECT", env)
-
-		if env == "sqlite3" {
-			os.Setenv("CGO_ENABLED", "0")
-		}
 
 		func() {
 			defer func() {

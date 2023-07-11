@@ -1,16 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
-	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"
 	"os"
-	"path/filepath"
 )
 
 func dbSetup() (db *gorm.DB, err error) {
@@ -39,7 +34,7 @@ func dbSetup() (db *gorm.DB, err error) {
 func OpenTestConnection() (db *gorm.DB, err error) {
 
 	dbDSN := os.Getenv("GORM_DSN")
-	fmt.Println("GORM_DSN: ", dbDSN)
+
 	switch os.Getenv("GORM_DIALECT") {
 	case "mysql":
 		log.Println("testing mysql...")
@@ -52,28 +47,28 @@ func OpenTestConnection() (db *gorm.DB, err error) {
 		if dbDSN == "" {
 			dbDSN = "gorm:gorm@tcp(localhost:9950)/gorm?charset=utf8&parseTime=True&loc=Local"
 		}
-		db, err = gorm.Open(postgres.Open(dbDSN), &gorm.Config{})
-	case "postgres":
-		log.Println("testing postgres...")
-		if dbDSN == "" {
-			dbDSN = "user=gorm password=gorm host=localhost dbname=gorm port=9920 sslmode=disable TimeZone=America/New_York"
-		}
-		db, err = gorm.Open(postgres.Open(dbDSN), &gorm.Config{})
-
-	case "sqlserver":
-		// CREATE LOGIN gorm WITH PASSWORD = 'LoremIpsum86';
-		// CREATE DATABASE gorm;
-		// USE gorm;
-		// CREATE USER gorm FROM LOGIN gorm;
-		// sp_changedbowner 'gorm';
-		log.Println("testing sqlserver...")
-		if dbDSN == "" {
-			dbDSN = "sqlserver://gorm:LoremIpsum86@localhost:9930?database=gorm"
-		}
-		db, err = gorm.Open(sqlserver.Open(dbDSN), &gorm.Config{})
-	default:
-		log.Println("testing sqlite3...")
-		db, err = gorm.Open(sqlite.Open(filepath.Join(os.TempDir(), "gorm.db")), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open(dbDSN), &gorm.Config{})
+		//case "postgres":
+		//	log.Println("testing postgres...")
+		//	if dbDSN == "" {
+		//		dbDSN = "user=gorm password=gorm host=localhost dbname=gorm port=9920 sslmode=disable TimeZone=America/New_York"
+		//	}
+		//	db, err = gorm.Open(postgres.Open(dbDSN), &gorm.Config{})
+		//
+		//case "sqlserver":
+		//	// CREATE LOGIN gorm WITH PASSWORD = 'LoremIpsum86';
+		//	// CREATE DATABASE gorm;
+		//	// USE gorm;
+		//	// CREATE USER gorm FROM LOGIN gorm;
+		//	// sp_changedbowner 'gorm';
+		//	log.Println("testing sqlserver...")
+		//	if dbDSN == "" {
+		//		dbDSN = "sqlserver://gorm:LoremIpsum86@localhost:9930?database=gorm"
+		//	}
+		//	db, err = gorm.Open(sqlserver.Open(dbDSN), &gorm.Config{})
+		//default:
+		//	log.Println("testing sqlite3...")
+		//	db, err = gorm.Open(sqlite.Open(filepath.Join(os.TempDir(), "gorm.db")), &gorm.Config{})
 	}
 
 	if debug := os.Getenv("DEBUG"); debug == "true" {
